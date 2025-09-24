@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://www.renesansgp.sk/sitemap.xml
+
+# Disallow certain file types
+Disallow: *.log
+Disallow: *.sql
+Disallow: *.txt$
+Disallow: /admin/
+Disallow: /private/
+
+# Crawl delay
+Crawl-delay: 1
