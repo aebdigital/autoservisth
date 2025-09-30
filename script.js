@@ -1,424 +1,396 @@
-// Wait for DOM to load
+// Autoservis TH JavaScript
 document.addEventListener('DOMContentLoaded', function() {
+    
     // Mobile Navigation
     const hamburger = document.querySelector('.hamburger');
     const navMenu = document.querySelector('.nav-menu');
-    const navbar = document.querySelector('.navbar');
-
-    hamburger.addEventListener('click', function() {
-        // Toggle menu and hamburger state
-        navMenu.classList.toggle('active');
-        hamburger.classList.toggle('active');
-        
-        // Change navbar to black when hamburger is active
-        updateNavbarColor();
-    });
-
-    // Function to update navbar color based on scroll and hamburger state
-    function updateNavbarColor() {
-        const scrollPosition = window.scrollY;
-        const triggerPoint = window.innerHeight * 0.2; // 20vh
-        const isHamburgerActive = hamburger.classList.contains('active');
-        
-        if (scrollPosition > triggerPoint || isHamburgerActive) {
-            // Scrolled down or hamburger active - black navbar
-            navbar.classList.add('scrolled');
-        } else {
-            // In hero section and hamburger not active - transparent navbar
-            navbar.classList.remove('scrolled');
-        }
+    
+    if (hamburger && navMenu) {
+        hamburger.addEventListener('click', function() {
+            navMenu.classList.toggle('active');
+            hamburger.classList.toggle('active');
+            
+            // Animate hamburger bars
+            const bars = hamburger.querySelectorAll('.bar');
+            if (hamburger.classList.contains('active')) {
+                bars[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+                bars[1].style.opacity = '0';
+                bars[2].style.transform = 'rotate(-45deg) translate(7px, -6px)';
+            } else {
+                bars[0].style.transform = 'none';
+                bars[1].style.opacity = '1';
+                bars[2].style.transform = 'none';
+            }
+        });
     }
-
+    
     // Close mobile menu when clicking on a link
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', function() {
             navMenu.classList.remove('active');
             hamburger.classList.remove('active');
             
-            // Update navbar color after closing menu
-            updateNavbarColor();
+            // Reset hamburger animation
+            const bars = hamburger.querySelectorAll('.bar');
+            bars[0].style.transform = 'none';
+            bars[1].style.opacity = '1';
+            bars[2].style.transform = 'none';
         });
     });
-
+    
     // Smooth scrolling for navigation links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
             if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
+                const headerHeight = document.querySelector('#header').offsetHeight;
+                const targetPosition = target.offsetTop - headerHeight;
+                
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
                 });
             }
         });
     });
-
-    // Scroll Progress Indicator
-    const scrollProgress = document.querySelector('.scroll-progress-bar');
+    
+    // Navbar scroll effect
+    const header = document.querySelector('#header');
+    let lastScrollTop = 0;
     
     window.addEventListener('scroll', function() {
-        const scrollPosition = window.scrollY;
-        const documentHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         
-        // Update scroll progress
-        if (scrollProgress) {
-            const scrollPercentage = (scrollPosition / documentHeight) * 100;
-            scrollProgress.style.height = `${scrollPercentage}%`;
+        if (scrollTop > 100) {
+            header.style.background = 'rgba(0, 0, 0, 0.95)';
+            header.style.backdropFilter = 'blur(10px)';
+        } else {
+            header.style.background = 'rgba(0, 0, 0, 0.9)';
+            header.style.backdropFilter = 'blur(10px)';
         }
         
-        // Update navbar color on scroll
-        updateNavbarColor();
-        
-        // Hide hero background when scrolling past hero section
-        const heroHeight = document.querySelector('.hero') ? document.querySelector('.hero').offsetHeight : 0;
-        const heroBackground = document.querySelector('.hero-background');
-        if (heroBackground) {
-            if (scrollPosition > heroHeight) {
-                heroBackground.classList.add('hidden');
-            } else {
-                heroBackground.classList.remove('hidden');
-            }
-        }
+        lastScrollTop = scrollTop;
     });
     
-    // Hero background image cycling
-    const heroImages = document.querySelectorAll('.hero-bg-image');
-    let currentImageIndex = 0;
-    
-    function cycleHeroImages() {
-        heroImages[currentImageIndex].classList.remove('active');
-        currentImageIndex = (currentImageIndex + 1) % heroImages.length;
-        heroImages[currentImageIndex].classList.add('active');
+    // Counter animation for stats
+    function animateCounter(element, target, duration = 2000, suffix = '') {
+        const start = 0;
+        const increment = target / (duration / 16);
+        let current = start;
+        
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            element.textContent = Math.floor(current) + suffix;
+        }, 16);
     }
     
-    // Cycle images every 5 seconds
-    setInterval(cycleHeroImages, 5000);
-
-    // Animate elements on scroll
+    // Intersection Observer for animations
     const observerOptions = {
-        threshold: 0.1,
+        threshold: 0.2,
         rootMargin: '0px 0px -50px 0px'
     };
-
+    
     const observer = new IntersectionObserver(function(entries) {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
+                entry.target.classList.add('visible');
+                
+                // Animate counters in stats section
+                if (entry.target.classList.contains('stats-section')) {
+                    const statNumbers = entry.target.querySelectorAll('.stat-number');
+                    statNumbers.forEach(stat => {
+                        const target = parseInt(stat.textContent.replace(/\D/g, ''));
+                        const suffix = stat.textContent.includes('+') ? '+' : 
+                                      stat.textContent.includes('%') ? '%' : '';
+                        if (target > 0) {
+                            animateCounter(stat, target, 2000, suffix);
+                        }
+                    });
+                }
             }
         });
     }, observerOptions);
-
-    // Observe elements for animation
-    const animateElements = document.querySelectorAll('.service-item, .portfolio-item, .gallery-item, .stat-item');
-    animateElements.forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(20px)';
-        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    
+    // Add fade-in animations to sections
+    const animatedElements = document.querySelectorAll('.o-nas, .sluzby, .galeria, .preco-my, .kontakt, .stats-section');
+    animatedElements.forEach(el => {
+        el.classList.add('fade-in');
         observer.observe(el);
     });
-
-    // Counter animation for stats
-    function animateCounter(element, target, duration = 2000) {
-        let start = 0;
-        const increment = target / (duration / 16);
-        
-        function updateCounter() {
-            start += increment;
-            if (start < target) {
-                element.textContent = Math.floor(start);
-                requestAnimationFrame(updateCounter);
-            } else {
-                element.textContent = target;
-            }
-        }
-        
-        updateCounter();
-    }
-
-    // Animate counters when hero stats section is visible
-    const heroStatsObserver = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const statNumbers = entry.target.querySelectorAll('.stat-number');
-                statNumbers.forEach(stat => {
-                    const numberElement = stat.childNodes[0];
-                    const target = parseInt(numberElement.textContent);
-                    if (!isNaN(target)) {
-                        animateCounter(numberElement, target);
-                    }
-                });
-                heroStatsObserver.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.5 });
-
-    // Observe hero stats
-    const heroStats = document.querySelector('.hero-stats');
-    if (heroStats) {
-        heroStatsObserver.observe(heroStats);
-    }
-
-    // Animate counters when about stats section is visible
-    const aboutStatsObserver = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const statNumbers = entry.target.querySelectorAll('.stat-number');
-                statNumbers.forEach(stat => {
-                    const target = parseInt(stat.textContent.replace('+', ''));
-                    if (!isNaN(target)) {
-                        animateCounter(stat, target);
-                        // Add back the + sign after animation
-                        setTimeout(() => {
-                            stat.textContent = stat.textContent + '+';
-                        }, 2000);
-                    }
-                });
-                aboutStatsObserver.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.5 });
-
-    // Observe about stats
-    const aboutStats = document.querySelector('.about-stats');
-    if (aboutStats) {
-        aboutStatsObserver.observe(aboutStats);
-    }
-
-    // Animate section title on scroll
-    const sectionTitleObserver = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animate');
-            }
-        });
-    }, { 
-        threshold: 0.3,
-        rootMargin: '0px 0px -100px 0px'
-    });
-
-    // Animate section title fill on scroll (middle of viewport)
-    const sectionTitleFillObserver = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('fill-animate');
-            }
-        });
-    }, { 
-        threshold: 0.5,
-        rootMargin: '0px 0px 0px 0px'
-    });
-
-    // Observe section title
-    const sectionTitle = document.querySelector('.section-title');
-    if (sectionTitle) {
-        sectionTitleObserver.observe(sectionTitle);
-        sectionTitleFillObserver.observe(sectionTitle);
-    }
-
-    // Animate services title on scroll
-    const servicesTitle = document.querySelector('.services-title');
-    if (servicesTitle) {
-        sectionTitleObserver.observe(servicesTitle);
-        sectionTitleFillObserver.observe(servicesTitle);
-    }
-
-    // Animate about title on scroll
-    const aboutTitle = document.querySelector('.about-title');
-    if (aboutTitle) {
-        sectionTitleObserver.observe(aboutTitle);
-        sectionTitleFillObserver.observe(aboutTitle);
-    }
-
-    // Animate service section titles on scroll
-    const serviceTitles = document.querySelectorAll('.service-title');
-    serviceTitles.forEach(title => {
-        if (title) {
-            sectionTitleObserver.observe(title);
-            sectionTitleFillObserver.observe(title);
+    
+    // Parallax effect for hero background
+    window.addEventListener('scroll', function() {
+        const scrolled = window.pageYOffset;
+        const heroImage = document.querySelector('.hero-image');
+        if (heroImage) {
+            const speed = scrolled * 0.5;
+            heroImage.style.transform = `translateY(${speed}px)`;
         }
     });
-
-    // Animate materials title on scroll
-    const materialsTitle = document.querySelector('.materials-title');
-    if (materialsTitle) {
-        sectionTitleObserver.observe(materialsTitle);
-        sectionTitleFillObserver.observe(materialsTitle);
+    
+    // Gallery lightbox functionality
+    const galleryItems = document.querySelectorAll('.galeria-item');
+    
+    galleryItems.forEach((item, index) => {
+        item.addEventListener('click', function() {
+            openLightbox(index);
+        });
+    });
+    
+    function openLightbox(index) {
+        // Create lightbox overlay
+        const lightbox = document.createElement('div');
+        lightbox.className = 'lightbox-overlay';
+        lightbox.innerHTML = `
+            <div class="lightbox-content">
+                <button class="lightbox-close">&times;</button>
+                <button class="lightbox-prev">&#10094;</button>
+                <img src="${galleryItems[index].querySelector('img').src}" alt="Gallery Image">
+                <button class="lightbox-next">&#10095;</button>
+                <div class="lightbox-counter">${index + 1} / ${galleryItems.length}</div>
+            </div>
+        `;
+        
+        document.body.appendChild(lightbox);
+        document.body.style.overflow = 'hidden';
+        
+        let currentIndex = index;
+        
+        // Close lightbox
+        lightbox.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', function(e) {
+            if (e.target === lightbox) closeLightbox();
+        });
+        
+        // Navigation
+        lightbox.querySelector('.lightbox-prev').addEventListener('click', function() {
+            currentIndex = currentIndex > 0 ? currentIndex - 1 : galleryItems.length - 1;
+            updateLightboxImage();
+        });
+        
+        lightbox.querySelector('.lightbox-next').addEventListener('click', function() {
+            currentIndex = currentIndex < galleryItems.length - 1 ? currentIndex + 1 : 0;
+            updateLightboxImage();
+        });
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', handleKeydown);
+        
+        function updateLightboxImage() {
+            const img = lightbox.querySelector('img');
+            const counter = lightbox.querySelector('.lightbox-counter');
+            img.src = galleryItems[currentIndex].querySelector('img').src;
+            counter.textContent = `${currentIndex + 1} / ${galleryItems.length}`;
+        }
+        
+        function handleKeydown(e) {
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') lightbox.querySelector('.lightbox-prev').click();
+            if (e.key === 'ArrowRight') lightbox.querySelector('.lightbox-next').click();
+        }
+        
+        function closeLightbox() {
+            document.body.removeChild(lightbox);
+            document.body.style.overflow = '';
+            document.removeEventListener('keydown', handleKeydown);
+        }
     }
-
-    // Contact form submission
-    const contactForm = document.querySelector('.contact-form');
+    
+    // Contact form handling
+    const contactForm = document.querySelector('#contact-form');
     if (contactForm) {
         contactForm.addEventListener('submit', function(e) {
-            // Let the form submit normally to PHP
-            const name = this.querySelector('#name').value.trim();
-            const email = this.querySelector('#email').value.trim();
-            const phone = this.querySelector('#phone').value.trim();
-            const message = this.querySelector('#message').value.trim();
-            
-            // Basic validation
-            if (!name || !email || !phone || !message) {
-                e.preventDefault();
-                alert('Prosím, vyplňte všetky polia.');
-                return false;
-            }
-            
-            // Email validation
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                e.preventDefault();
-                alert('Prosím, zadajte platnú emailovú adresu.');
-                return false;
-            }
-        });
-    }
-    
-    // Check for success/error messages from URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const status = urlParams.get('status');
-    const msg = urlParams.get('msg');
-    
-    if (status === 'success') {
-        alert('Ďakujeme! Vaša správa bola úspešne odoslaná. Ozveme sa vám čoskoro.');
-        // Remove the status parameter from URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (status === 'error') {
-        let errorMessage = 'Ups! Nastala chyba pri odosielaní správy. Prosím, skúste to znovu alebo nás kontaktujte priamo.';
-        
-        switch(msg) {
-            case 'missing_fields':
-                errorMessage = 'Prosím, vyplňte všetky povinné polia.';
-                break;
-            case 'invalid_email':
-                errorMessage = 'Prosím, zadajte platnú emailovú adresu.';
-                break;
-            case 'send_failed':
-                errorMessage = 'Nepodarilo sa odoslať správu. Skúste to prosím znovu.';
-                break;
-        }
-        
-        alert(errorMessage);
-        // Remove the status parameter from URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    // Gallery image modal disabled - items now link to portfolio page
-    // const galleryItems = document.querySelectorAll('.gallery-item');
-    // Gallery modal functionality removed to allow direct navigation to portfolio page
-
-    // Services carousel functionality
-    let currentSlide = 0;
-    const carousel = document.querySelector('.services-carousel');
-    const cards = document.querySelectorAll('.services-carousel .service-card');
-    const prevBtn = document.querySelector('.carousel-prev');
-    const nextBtn = document.querySelector('.carousel-next');
-    
-    if (carousel && cards.length > 0) {
-        const cardWidth = cards[0].offsetWidth + 40; // card width + gap
-        const maxSlides = Math.max(0, cards.length - 3); // Show 3 cards at a time, 4th partially visible
-        
-        function updateCarousel() {
-            const translateX = -(currentSlide * cardWidth);
-            carousel.style.transform = `translateX(${translateX}px)`;
-            
-            // Update button states
-            prevBtn.disabled = currentSlide === 0;
-            nextBtn.disabled = currentSlide >= maxSlides;
-        }
-        
-        function nextSlide() {
-            if (currentSlide < maxSlides) {
-                currentSlide++;
-                updateCarousel();
-            }
-        }
-        
-        function prevSlide() {
-            if (currentSlide > 0) {
-                currentSlide--;
-                updateCarousel();
-            }
-        }
-        
-        // Event listeners
-        nextBtn.addEventListener('click', nextSlide);
-        prevBtn.addEventListener('click', prevSlide);
-        
-        // Initialize carousel
-        updateCarousel();
-        
-        // Handle window resize
-        window.addEventListener('resize', function() {
-            const newCardWidth = cards[0].offsetWidth + 40;
-            if (newCardWidth !== cardWidth) {
-                location.reload(); // Simple solution for responsive updates
-            }
-        });
-    }
-
-    // Privacy Policy Modal Functionality
-    const privacyModal = document.getElementById('privacy-modal');
-    const privacyLink = document.getElementById('privacy-policy-link');
-    const modalClose = document.querySelector('.modal-close');
-
-    // Open modal
-    if (privacyLink) {
-        privacyLink.addEventListener('click', function(e) {
             e.preventDefault();
-            openModal();
+            
+            const formData = new FormData(this);
+            const button = this.querySelector('button[type="submit"]');
+            const originalText = button.textContent;
+            
+            // Show loading state
+            button.textContent = 'ODOSIELAM...';
+            button.disabled = true;
+            
+            // Simulate form submission (replace with actual form handling)
+            setTimeout(() => {
+                alert('Ďakujeme za vašu správu! Ozveme sa vám čoskoro.');
+                this.reset();
+                button.textContent = originalText;
+                button.disabled = false;
+            }, 1500);
         });
     }
-
-    // Close modal when clicking X
-    if (modalClose) {
-        modalClose.addEventListener('click', function() {
-            closeModal();
+    
+    // Add hover effects to cards
+    const cards = document.querySelectorAll('.sluzba-card, .benefit-item, .galeria-item');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
         });
-    }
-
-    // Close modal when clicking outside
-    if (privacyModal) {
-        privacyModal.addEventListener('click', function(e) {
-            if (e.target === privacyModal) {
-                closeModal();
-            }
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
         });
-    }
-
-    // Close modal with Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && privacyModal && privacyModal.style.display === 'block') {
-            closeModal();
-        }
     });
-
-    function openModal() {
-        if (privacyModal) {
-            privacyModal.style.display = 'block';
-            document.body.classList.add('modal-open');
-            
-            // Add show class after display is set for animation
-            setTimeout(() => {
-                privacyModal.classList.add('show');
-            }, 10);
-        }
-    }
-
-    function closeModal() {
-        if (privacyModal) {
-            privacyModal.classList.remove('show');
-            
-            // Wait for animation to complete before hiding
-            setTimeout(() => {
-                privacyModal.style.display = 'none';
-                document.body.classList.remove('modal-open');
-            }, 300);
-        }
-    }
-
-    // Continuous slider animation (no pause on hover)
+    
+    // Loading animation
+    window.addEventListener('load', function() {
+        document.body.classList.add('loaded');
+    });
+    
+    // Add scroll indicator
+    const scrollIndicator = document.createElement('div');
+    scrollIndicator.className = 'scroll-indicator';
+    scrollIndicator.innerHTML = '<div class="scroll-line"></div>';
+    document.body.appendChild(scrollIndicator);
+    
+    window.addEventListener('scroll', function() {
+        const scrollPercent = (window.pageYOffset / (document.body.scrollHeight - window.innerHeight)) * 100;
+        scrollIndicator.querySelector('.scroll-line').style.height = scrollPercent + '%';
+    });
+    
 });
 
-// Gallery modal styles removed - no longer needed
-// Modal functionality disabled in favor of direct portfolio navigation 
+// Add CSS for lightbox and additional styles
+const lightboxStyles = `
+<style>
+.lightbox-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+.lightbox-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-content img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.lightbox-close,
+.lightbox-prev,
+.lightbox-next {
+    position: absolute;
+    background: rgba(229, 9, 20, 0.8);
+    color: white;
+    border: none;
+    padding: 15px;
+    cursor: pointer;
+    font-size: 24px;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.lightbox-close {
+    top: -25px;
+    right: -25px;
+}
+
+.lightbox-prev {
+    left: -80px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.lightbox-next {
+    right: -80px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.lightbox-close:hover,
+.lightbox-prev:hover,
+.lightbox-next:hover {
+    background: #e50914;
+    transform: scale(1.1);
+}
+
+.lightbox-counter {
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.scroll-indicator {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: 9999;
+}
+
+.scroll-line {
+    width: 100%;
+    background: #e50914;
+    height: 0%;
+    transition: height 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.loaded .fade-in {
+    animation: slideInUp 0.8s ease forwards;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .lightbox-prev,
+    .lightbox-next {
+        display: none;
+    }
+    
+    .lightbox-close {
+        top: 10px;
+        right: 10px;
+    }
+}
+</style>
+`;
+
+// Inject styles
+document.head.insertAdjacentHTML('beforeend', lightboxStyles);
