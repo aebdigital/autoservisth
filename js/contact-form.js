@@ -25,11 +25,14 @@ class ContactForm {
         // Get form data
         const formData = new FormData(this.form);
         const data = {
-            name: formData.get('name')?.trim(),
-            email: formData.get('email')?.trim(),
-            phone: formData.get('phone')?.trim(),
-            message: formData.get('message')?.trim()
+            name: (formData.get('name') || '').trim(),
+            email: (formData.get('email') || '').trim(),
+            phone: (formData.get('phone') || '').trim(),
+            message: (formData.get('message') || '').trim()
         };
+
+        // Debug: Log form data
+        console.log('Form data collected:', data);
 
         // Validate form
         if (!this.validateForm(data)) {
@@ -41,6 +44,7 @@ class ContactForm {
         this.showMessage('Odosielam správu...', 'loading');
 
         try {
+            console.log('Sending form data to function:', data);
             const response = await fetch('/.netlify/functions/contact', {
                 method: 'POST',
                 headers: {
@@ -49,7 +53,9 @@ class ContactForm {
                 body: JSON.stringify(data)
             });
 
+            console.log('Response status:', response.status);
             const result = await response.json();
+            console.log('Response data:', result);
 
             if (response.ok && result.success) {
                 this.showMessage(result.message || 'Správa bola úspešne odoslaná!', 'success');
@@ -60,6 +66,7 @@ class ContactForm {
                     this.hideMessage();
                 }, 5000);
             } else {
+                console.error('Server error response:', result);
                 this.showMessage(result.error || 'Vyskytla sa chyba pri odosielaní správy.', 'error');
             }
 
@@ -74,9 +81,12 @@ class ContactForm {
     validateForm(data) {
         const errors = [];
 
+        console.log('Validating form data:', data);
+
         // Name validation
         if (!data.name || data.name.length < 2) {
             errors.push('Meno musí mať aspoň 2 znaky');
+            console.log('Name validation failed:', data.name, 'Length:', data.name ? data.name.length : 0);
         }
 
         // Email validation
@@ -101,10 +111,12 @@ class ContactForm {
         }
 
         if (errors.length > 0) {
+            console.log('Validation errors:', errors);
             this.showMessage(errors.join('<br>'), 'error');
             return false;
         }
 
+        console.log('Form validation passed');
         return true;
     }
 
