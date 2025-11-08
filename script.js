@@ -308,27 +308,34 @@ const lightboxStyles = `
 }
 
 .lightbox-close {
-    top: -25px;
-    right: -25px;
+    position: fixed;
+    top: 20px;
+    right: 20px;
 }
 
 .lightbox-prev {
-    left: -80px;
+    position: fixed;
+    left: 50px;
     top: 50%;
     transform: translateY(-50%);
 }
 
 .lightbox-next {
-    right: -80px;
+    position: fixed;
+    right: 50px;
     top: 50%;
     transform: translateY(-50%);
 }
 
-.lightbox-close:hover,
+.lightbox-close:hover {
+    background: #e50914;
+    transform: scale(1.05);
+}
+
 .lightbox-prev:hover,
 .lightbox-next:hover {
     background: #e50914;
-    transform: scale(1.1);
+    transform: translateY(-50%) scale(1.05);
 }
 
 .lightbox-counter {
