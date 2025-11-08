@@ -5,6 +5,7 @@ class ContactForm {
         this.messageDiv = document.getElementById('form-message');
         this.submitButton = null;
         this.originalButtonText = '';
+        this.isSubmitting = false;
         
         this.init();
     }
@@ -22,6 +23,14 @@ class ContactForm {
     async handleSubmit(event) {
         event.preventDefault();
         
+        // Prevent multiple submissions
+        if (this.isSubmitting) {
+            console.log('Form already submitting, ignoring duplicate submission');
+            return;
+        }
+        
+        this.isSubmitting = true;
+        
         // Get form data
         const formData = new FormData(this.form);
         const data = {
@@ -36,6 +45,7 @@ class ContactForm {
 
         // Validate form
         if (!this.validateForm(data)) {
+            this.isSubmitting = false;
             return;
         }
 
@@ -75,6 +85,7 @@ class ContactForm {
             this.showMessage('Vyskytla sa chyba. Skúste to prosím neskôr.', 'error');
         } finally {
             this.setLoadingState(false);
+            this.isSubmitting = false;
         }
     }
 
@@ -175,16 +186,19 @@ class ContactForm {
     }
 }
 
-// Initialize contact form when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    new ContactForm();
-});
-
-// Also initialize if script is loaded after DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
+// Initialize contact form - ensure single instance
+(function() {
+    let contactFormInitialized = false;
+    
+    function initContactForm() {
+        if (contactFormInitialized) return;
+        contactFormInitialized = true;
         new ContactForm();
-    });
-} else {
-    new ContactForm();
-}
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initContactForm);
+    } else {
+        initContactForm();
+    }
+})();
