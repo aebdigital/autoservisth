@@ -1,0 +1,22 @@
+{
+  "name": "autoservis-th",
+  "version": "1.0.0",
+  "description": "Autoservis TH - Professional car service website",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve .",
+    "netlify-dev": "netlify dev"
+  },
+  "keywords": [
+    "autoservis",
+    "car-service",
+    "slovakia",
+    "automotive"
+  ],
+  "author": "AEB Digital",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.0"
+  }
+}

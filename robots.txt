@@ -2,14 +2,25 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://www.renesansgp.sk/sitemap.xml
+Sitemap: https://www.autoservisth.sk/sitemap.xml
 
-# Disallow certain file types
-Disallow: *.log
-Disallow: *.sql
-Disallow: *.txt$
-Disallow: /admin/
-Disallow: /private/
+# Important pages
+Allow: /index.html
+Allow: /sources/
 
-# Crawl delay
+# Block if any admin or private areas exist
+# Disallow: /admin/
+# Disallow: /private/
+
+# Crawl delay (optional)
 Crawl-delay: 1
+
+# Cache instructions for search engines
+# This helps with proper caching of static resources
+Allow: /*.css$
+Allow: /*.js$
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.png$
+Allow: /*.gif$
+Allow: /*.webp$

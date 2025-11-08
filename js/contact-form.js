@@ -1,0 +1,178 @@
+// Contact Form Handler for SMTP2GO
+class ContactForm {
+    constructor() {
+        this.form = document.getElementById('contact-form');
+        this.messageDiv = document.getElementById('form-message');
+        this.submitButton = null;
+        this.originalButtonText = '';
+        
+        this.init();
+    }
+
+    init() {
+        if (this.form) {
+            this.submitButton = this.form.querySelector('button[type="submit"]');
+            if (this.submitButton) {
+                this.originalButtonText = this.submitButton.textContent;
+            }
+            this.form.addEventListener('submit', this.handleSubmit.bind(this));
+        }
+    }
+
+    async handleSubmit(event) {
+        event.preventDefault();
+        
+        // Get form data
+        const formData = new FormData(this.form);
+        const data = {
+            name: formData.get('name')?.trim(),
+            email: formData.get('email')?.trim(),
+            phone: formData.get('phone')?.trim(),
+            message: formData.get('message')?.trim()
+        };
+
+        // Validate form
+        if (!this.validateForm(data)) {
+            return;
+        }
+
+        // Show loading state
+        this.setLoadingState(true);
+        this.showMessage('Odosielam správu...', 'loading');
+
+        try {
+            const response = await fetch('/.netlify/functions/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                this.showMessage(result.message || 'Správa bola úspešne odoslaná!', 'success');
+                this.form.reset();
+                
+                // Auto-hide success message after 5 seconds
+                setTimeout(() => {
+                    this.hideMessage();
+                }, 5000);
+            } else {
+                this.showMessage(result.error || 'Vyskytla sa chyba pri odosielaní správy.', 'error');
+            }
+
+        } catch (error) {
+            console.error('Form submission error:', error);
+            this.showMessage('Vyskytla sa chyba. Skúste to prosím neskôr.', 'error');
+        } finally {
+            this.setLoadingState(false);
+        }
+    }
+
+    validateForm(data) {
+        const errors = [];
+
+        // Name validation
+        if (!data.name || data.name.length < 2) {
+            errors.push('Meno musí mať aspoň 2 znaky');
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!data.email) {
+            errors.push('Email je povinný');
+        } else if (!emailRegex.test(data.email)) {
+            errors.push('Neplatný formát emailu');
+        }
+
+        // Message validation
+        if (!data.message || data.message.length < 10) {
+            errors.push('Správa musí mať aspoň 10 znakov');
+        }
+
+        // Phone validation (optional, but if provided should be valid)
+        if (data.phone && data.phone.length > 0) {
+            const phoneRegex = /^[\+]?[0-9\s\-\(\)]{9,}$/;
+            if (!phoneRegex.test(data.phone)) {
+                errors.push('Neplatný formát telefónneho čísla');
+            }
+        }
+
+        if (errors.length > 0) {
+            this.showMessage(errors.join('<br>'), 'error');
+            return false;
+        }
+
+        return true;
+    }
+
+    setLoadingState(loading) {
+        if (this.submitButton) {
+            if (loading) {
+                this.submitButton.disabled = true;
+                this.submitButton.innerHTML = '<span class="spinner"></span> Odosielam...';
+                this.submitButton.style.opacity = '0.7';
+            } else {
+                this.submitButton.disabled = false;
+                this.submitButton.textContent = this.originalButtonText;
+                this.submitButton.style.opacity = '1';
+            }
+        }
+
+        // Disable all form inputs during loading
+        const inputs = this.form.querySelectorAll('input, textarea, button');
+        inputs.forEach(input => {
+            input.disabled = loading;
+        });
+    }
+
+    showMessage(message, type) {
+        if (!this.messageDiv) {
+            // Create message div if it doesn't exist
+            this.messageDiv = document.createElement('div');
+            this.messageDiv.id = 'form-message';
+            this.form.parentNode.insertBefore(this.messageDiv, this.form.nextSibling);
+        }
+
+        this.messageDiv.innerHTML = message;
+        this.messageDiv.className = `form-message form-message--${type}`;
+        this.messageDiv.style.display = 'block';
+
+        // Scroll to message
+        this.messageDiv.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+        });
+
+        // Auto-hide error messages after 8 seconds
+        if (type === 'error') {
+            setTimeout(() => {
+                this.hideMessage();
+            }, 8000);
+        }
+    }
+
+    hideMessage() {
+        if (this.messageDiv) {
+            this.messageDiv.style.display = 'none';
+            this.messageDiv.className = 'form-message';
+            this.messageDiv.innerHTML = '';
+        }
+    }
+}
+
+// Initialize contact form when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    new ContactForm();
+});
+
+// Also initialize if script is loaded after DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        new ContactForm();
+    });
+} else {
+    new ContactForm();
+}
