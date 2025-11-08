@@ -88,8 +88,8 @@ class ContactForm {
         }
 
         // Message validation
-        if (!data.message || data.message.length < 10) {
-            errors.push('Správa musí mať aspoň 10 znakov');
+        if (!data.message) {
+            errors.push('Správa je povinná');
         }
 
         // Phone validation (optional, but if provided should be valid)
