@@ -36,7 +36,7 @@ exports.handler = async (event, context) => {
     // SMTP2GO API configuration
     const smtp2goApiKey = process.env.SMTP2GO_API_KEY;
     const fromEmail = process.env.SMTP2GO_FROM_EMAIL || 'noreply@autoservisth.sk';
-    const toEmail = process.env.BUSINESS_EMAIL || 'alexander.hidv@gmail.com';
+    const toEmail = process.env.BUSINESS_EMAIL || 'autoservisth@gmail.com';
 
     console.log('Environment check:', {
       hasApiKey: !!smtp2goApiKey,
