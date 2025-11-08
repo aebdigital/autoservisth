@@ -177,7 +177,7 @@ exports.handler = async (event, context) => {
       },
       body: JSON.stringify({
         to: [toEmail],
-        from: fromEmail,
+        sender: fromEmail,
         subject: `Nová správa z webu AUTOSERVIS TH - ${name}`,
         html_body: htmlTemplate,
         text_body: `
