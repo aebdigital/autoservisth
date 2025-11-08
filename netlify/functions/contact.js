@@ -8,9 +8,12 @@ exports.handler = async (event, context) => {
 
   try {
     const { name, email, phone, message } = JSON.parse(event.body);
+    
+    console.log('Received form data:', { name, email, phone: phone ? '***' : '', message: message ? 'provided' : 'missing' });
 
     // Validate required fields
     if (!name || !email || !message) {
+      console.error('Validation failed - missing required fields:', { name: !!name, email: !!email, message: !!message });
       return {
         statusCode: 400,
         body: JSON.stringify({ 
@@ -32,8 +35,15 @@ exports.handler = async (event, context) => {
 
     // SMTP2GO API configuration
     const smtp2goApiKey = process.env.SMTP2GO_API_KEY;
-    const fromEmail = process.env.FROM_EMAIL || 'noreply@autoservisth.sk';
-    const toEmail = process.env.TO_EMAIL || 'alexander.hidv@gmail.com';
+    const fromEmail = process.env.SMTP2GO_FROM_EMAIL || 'noreply@autoservisth.sk';
+    const toEmail = process.env.BUSINESS_EMAIL || 'alexander.hidv@gmail.com';
+
+    console.log('Environment check:', {
+      hasApiKey: !!smtp2goApiKey,
+      fromEmail,
+      toEmail,
+      apiKeyLength: smtp2goApiKey ? smtp2goApiKey.length : 0
+    });
 
     if (!smtp2goApiKey) {
       console.error('SMTP2GO_API_KEY not configured');
